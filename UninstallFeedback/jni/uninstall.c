@@ -14,12 +14,16 @@
  * limitations under the License.
  *
  */
+
 #include <jni.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <android/log.h>
+#include <unistd.h>
 #include <sys/inotify.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 /* 宏定义begin */
 //清0宏
@@ -34,9 +38,11 @@
 /* 内全局变量begin */
 static char c_TAG[] = "onEvent";
 static jboolean b_IS_COPY = JNI_TRUE;
+static const char APP_FILES_DIR[] = "/data/data/cn.kuwo.player/files";
+static const char APP_LOCK_FILE[] = "/data/data/cn.kuwo.player/files/lockFile";
+void Java_cn_kuwo_base_utils_UninstallUtil_init(JNIEnv* env, jobject thiz,
+		jstring path, jstring url, jint version) {
 
-void Java_cn_edu_bjtu_tsplaycool_uninstallfeedback_utils_UninstallUtil_init(JNIEnv* env,
-		jobject thiz, jstring path, jstring url, jint version) {
 	jstring tag = (*env)->NewStringUTF(env, c_TAG);
 
 	//初始化log
@@ -53,6 +59,41 @@ void Java_cn_edu_bjtu_tsplaycool_uninstallfeedback_utils_UninstallUtil_init(JNIE
 						(*env)->NewStringUTF(env, "fork failed !!!"),
 						&b_IS_COPY));
 	} else if (pid == 0) {
+
+		// 若监听文件所在文件夹不存在，创建
+		FILE *p_filesDir = fopen(APP_FILES_DIR, "r");
+		if (p_filesDir == NULL) {
+			int filesDirRet = mkdir(APP_FILES_DIR, S_IRWXU | S_IRWXG | S_IXOTH);
+			if (filesDirRet == -1) {
+				LOG_ERROR((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+						(*env)->GetStringUTFChars(env,
+								(*env)->NewStringUTF(env, "mkdir failed !!!"),
+								&b_IS_COPY));
+
+				exit(1);
+			}
+		}
+
+		// 创建锁文件，通过检测加锁状态来保证只有一个卸载监听进程
+		int lockFileDescriptor = open(APP_LOCK_FILE, O_RDONLY);
+		if (lockFileDescriptor == -1) {
+			lockFileDescriptor = open(APP_LOCK_FILE, O_CREAT);
+		}
+		int lockRet = flock(lockFileDescriptor, LOCK_EX | LOCK_NB);
+		if (lockRet == -1) {
+			LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+					(*env)->GetStringUTFChars(env,
+							(*env)->NewStringUTF(env,
+									"observed by another process"),
+							&b_IS_COPY));
+
+			exit(0);
+		}
+		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+				(*env)->GetStringUTFChars(env,
+						(*env)->NewStringUTF(env, "observed by child process"),
+						&b_IS_COPY));
+
 		//子进程注册目录监听器
 		int fileDescriptor = inotify_init();
 		if (fileDescriptor < 0) {
