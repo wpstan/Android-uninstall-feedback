@@ -38,10 +38,13 @@
 /* 内全局变量begin */
 static char c_TAG[] = "onEvent";
 static jboolean b_IS_COPY = JNI_TRUE;
-static const char APP_FILES_DIR[] = "/data/data/cn.kuwo.player/files";
-static const char APP_LOCK_FILE[] = "/data/data/cn.kuwo.player/files/lockFile";
-void Java_cn_kuwo_base_utils_UninstallUtil_init(JNIEnv* env, jobject thiz,
-		jstring path, jstring url, jint version) {
+static const char APP_FILES_DIR[] = "/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/files";
+static const char APP_LOCK_FILE[] = "/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/files/lockFile";
+static const char APP_UNINSTALL_PID_FILE[] =
+		"/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/files/uninstall"; // 存储c层监听进程的pid
+void Java_cn_edu_bjtu_tsplaycool_uninstallfeedback_utils_UninstallUtil_init(
+		JNIEnv* env, jobject thiz, jstring path, jstring intentAction,
+		jstring url, jint version) {
 
 	jstring tag = (*env)->NewStringUTF(env, c_TAG);
 
@@ -93,6 +96,10 @@ void Java_cn_kuwo_base_utils_UninstallUtil_init(JNIEnv* env, jobject thiz,
 				(*env)->GetStringUTFChars(env,
 						(*env)->NewStringUTF(env, "observed by child process"),
 						&b_IS_COPY));
+		// 把c层监听进程的pid写入APP_UNINSTALL_PID_FILE
+		FILE *uninstallFile = fopen(APP_UNINSTALL_PID_FILE, "w");
+		fprintf(uninstallFile, "%d", getpid());
+		fclose(uninstallFile);
 
 		//子进程注册目录监听器
 		int fileDescriptor = inotify_init();
@@ -149,20 +156,84 @@ void Java_cn_kuwo_base_utils_UninstallUtil_init(JNIEnv* env, jobject thiz,
 
 		if (version >= 17) {
 			//4.2以上的系统由于用户权限管理更严格，需要加上 --user 0
-			execlp("am", "am", "start", "--user", "0", "-a",
-					"android.intent.action.VIEW", "-d",
-					(*env)->GetStringUTFChars(env, url, NULL), (char *) NULL);
+			if (strcmp((*env)->GetStringUTFChars(env, intentAction, NULL),
+					"android.intent.action.VIEW") == 0) {
+				// 系统没有自带浏览器，启动默认浏览器
+				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+						(*env)->GetStringUTFChars(env,
+								(*env)->NewStringUTF(env,
+										"Android big than 17，default"),
+								&b_IS_COPY));
+				execlp("am", "am", "start", "--user", "0", "-a",
+						"android.intent.action.VIEW", "-d",
+						(*env)->GetStringUTFChars(env, url, NULL),
+						(char *) NULL);
+			} else {
+				//启动自带浏览器
+				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+						(*env)->GetStringUTFChars(env,
+								(*env)->NewStringUTF(env,
+										"Android big than 17，self "),
+								&b_IS_COPY));
+				execlp("am", "am", "start", "--user", "0", "-a",
+						"android.intent.action.VIEW", "-d",
+						(*env)->GetStringUTFChars(env, url, NULL), "-n",
+						"com.android.browser/com.android.browser.BrowserActivity",
+						(char *) NULL);
+			}
 		} else {
-			execlp("am", "am", "start", "-a", "android.intent.action.VIEW",
-					"-d", (*env)->GetStringUTFChars(env, url, NULL),
-					(char *) NULL);
-		}
+			if (strcmp((*env)->GetStringUTFChars(env, intentAction, NULL),
+					"android.intent.action.VIEW") == 0) {
+				//系统没有自带浏览器，启动默认浏览器
+				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+						(*env)->GetStringUTFChars(env,
+								(*env)->NewStringUTF(env,
+										"Android small than 17，default "),
+								&b_IS_COPY));
+				execlp("am", "am", "start", "-a", "android.intent.action.VIEW",
+						"-d", (*env)->GetStringUTFChars(env, url, NULL),
+						(char *) NULL);
+			} else {
+				//启动自带浏览器
+				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+						(*env)->GetStringUTFChars(env,
+								(*env)->NewStringUTF(env,
+										"Android small than 17，self"),
+								&b_IS_COPY));
+				execlp("am", "am", "start", "-a", "android.intent.action.VIEW",
+						"-d", (*env)->GetStringUTFChars(env, url, NULL), "-n",
+						"com.android.browser/com.android.browser.BrowserActivity",
+						(char *) NULL);
+			}
 
-		//扩展：可以执行其他shell命令，am(即activity manager)，可以打开某程序、服务，broadcast intent，等等
+		}
 
 	} else {
 		//父进程直接退出，使子进程被init进程领养，以避免子进程僵死
 	}
 
+}
+
+// 杀死c层监听进程
+void Java_cn_edu_bjtu_tsplaycool_uninstallfeedback_utils_UninstallUtil_kill(
+		JNIEnv* env, jobject thiz) {
+	jstring tag = (*env)->NewStringUTF(env, c_TAG);
+	LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+			(*env)->GetStringUTFChars(env,
+					(*env)->NewStringUTF(env, "调用kill方法"), &b_IS_COPY));
+	// 读取pid
+	FILE *fp = fopen(APP_UNINSTALL_PID_FILE, "r");
+	if (fp != NULL) {
+		int pid;
+		fscanf(fp, "%d", &pid);
+		// 杀死指定pid进程
+		if (pid > 0) {
+			LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+					(*env)->GetStringUTFChars(env,
+							(*env)->NewStringUTF(env, "执行kill方法"), &b_IS_COPY));
+			kill(pid, SIGKILL);
+		}
+	}
+	fclose(fp);
 }
 

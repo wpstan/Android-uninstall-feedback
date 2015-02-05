@@ -27,7 +27,7 @@
 		</buildCommand>
 		<buildCommand>
 			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
-			<triggers>auto,clean,</triggers>
+			<triggers>clean,</triggers>
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>

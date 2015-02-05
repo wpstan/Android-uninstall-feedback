@@ -2,13 +2,14 @@ package cn.edu.bjtu.tsplaycool.uninstallfeedback;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import cn.edu.bjtu.tsplaycool.uninstallfeedback.utils.UninstallUtil;
+import cn.edu.bjtu.tsplaycool.uninstallfeedback.service.UninstallMonitorService;
 
 public class MainActivity extends Activity {
 
@@ -22,11 +23,15 @@ public class MainActivity extends Activity {
 					.add(R.id.container, new PlaceholderFragment()).commit();
 		}
 	}
-	
+
 	@Override
 	protected void onStart() {
 		super.onStart();
-		UninstallUtil.regUninstallService(this);
+		// 启动JAVA层卸载监听独立进程
+		Intent intent = new Intent(MainActivity.this,
+				UninstallMonitorService.class);
+		startService(intent);
+
 	}
 
 	@Override

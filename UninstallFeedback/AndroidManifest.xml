@@ -22,6 +22,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 注册卸载监听服务 -->
+        <service
+            android:name="cn.edu.bjtu.tsplaycool.uninstallfeedback.service.UninstallMonitorService"
+            android:exported="true"
+            android:process=":uninstall" />
     </application>
 
 </manifest>

@@ -1,11 +1,9 @@
 obj/local/x86/objs/uninstall/uninstall.o: jni/uninstall.c \
- C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/string.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/jni.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/stdio.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/cdefs.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/cdefs_elf.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/android/api-level.h \
- C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/malloc.h \
- C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/jni.h \
- C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/stdio.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/types.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/stdint.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/_types.h \
@@ -20,6 +18,8 @@ obj/local/x86/objs/uninstall/uninstall.o: jni/uninstall.c \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/machine/kernel.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/sysmacros.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/stdlib.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/string.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/malloc.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/alloca.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/strings.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/memory.h \
@@ -46,21 +46,26 @@ obj/local/x86/objs/uninstall/uninstall.o: jni/uninstall.c \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/linux/capability.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/pathconf.h \
  C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/inotify.h \
- C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/linux/inotify.h
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/linux/inotify.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/stat.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/linux/stat.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/endian.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/endian.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/machine/endian.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/fcntl.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/linux/fcntl.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/asm/fcntl.h \
+ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/asm-generic/fcntl.h
 
-C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/string.h:
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/jni.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/stdio.h:
 
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/cdefs.h:
 
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/cdefs_elf.h:
 
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/android/api-level.h:
-
-C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/malloc.h:
-
-C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/jni.h:
-
-C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/stdio.h:
 
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/types.h:
 
@@ -89,6 +94,10 @@ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/machine/kernel.h:
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/sysmacros.h:
 
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/stdlib.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/string.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/malloc.h:
 
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/alloca.h:
 
@@ -143,3 +152,21 @@ C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/pathconf.h:
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/inotify.h:
 
 C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/linux/inotify.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/stat.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/linux/stat.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/endian.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/sys/endian.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/machine/endian.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/fcntl.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/linux/fcntl.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/asm/fcntl.h:
+
+C:/android-ndk-r8e/platforms/android-9/arch-x86/usr/include/asm-generic/fcntl.h:
