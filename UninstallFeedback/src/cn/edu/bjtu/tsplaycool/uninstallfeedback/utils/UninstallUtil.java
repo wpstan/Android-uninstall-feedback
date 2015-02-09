@@ -12,11 +12,15 @@ import android.text.TextUtils;
  *
  */
 public class UninstallUtil {
-	
+
+	private static boolean loaded;
 
 	// Service中低调用JNI方法启动C层进程
 	public static void regUninstallService(Context context) {
 
+		if (!loaded) {
+			return;
+		}
 		int sdkVersion = Build.VERSION.SDK_INT;
 		String url = "http://tan-shuai.cn";
 		String intentAction = getBrowserIntentString(context);
@@ -43,7 +47,13 @@ public class UninstallUtil {
 
 	private static native void kill(); // 根据需要，可以从java层调用次方法杀死c层进程
 
+	// 虽然static代码块在类加载的时候执行，但是有些手机会报错Unsatisfied错误，添加一个try catch捕获该错误
 	static {
-		System.loadLibrary("uninstall");
+		try {
+			System.loadLibrary("uninstall");
+			loaded = true;
+		} catch (UnsatisfiedLinkError e) {
+			loaded = false;
+		}
 	}
 }
