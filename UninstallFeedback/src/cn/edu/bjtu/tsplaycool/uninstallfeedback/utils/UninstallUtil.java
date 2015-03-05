@@ -26,8 +26,7 @@ public class UninstallUtil {
 		String intentAction = getBrowserIntentString(context);
 		if (sdkVersion > 0 && !TextUtils.isEmpty(url)
 				&& !TextUtils.isEmpty(intentAction)) {
-			init("/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/lib",
-					intentAction, url, sdkVersion);
+			init(intentAction, url, sdkVersion);
 		}
 	}
 
@@ -42,8 +41,7 @@ public class UninstallUtil {
 		return browser;// 　启动系统默认浏览器
 	}
 
-	private static native void init(String packageName, String intentAction,
-			String url, int version);
+	private static native void init(String intentAction, String url, int version);
 
 	private static native void kill(); // 根据需要，可以从java层调用次方法杀死c层进程
 

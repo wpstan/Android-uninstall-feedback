@@ -38,13 +38,19 @@
 /* 内全局变量begin */
 static char c_TAG[] = "onEvent";
 static jboolean b_IS_COPY = JNI_TRUE;
-static const char APP_FILES_DIR[] = "/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/files";
-static const char APP_LOCK_FILE[] = "/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/files/lockFile";
+static const char APP_DIR[] =
+		"/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback";
+static const char APP_FILES_DIR[] =
+		"/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/uninstall";
+static const char APP_LOCK_FILE[] =
+		"/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/uninstall/lockFile";
+static const char APP_OBSERVED_FILE[] =
+		"/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/uninstall/observedFile";
 static const char APP_UNINSTALL_PID_FILE[] =
-		"/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/files/uninstall"; // 存储c层监听进程的pid
+		"/data/data/cn.edu.bjtu.tsplaycool.uninstallfeedback/uninstall/uninstall"; // 存储c层监听进程的pid
 void Java_cn_edu_bjtu_tsplaycool_uninstallfeedback_utils_UninstallUtil_init(
-		JNIEnv* env, jobject thiz, jstring path, jstring intentAction,
-		jstring url, jint version) {
+		JNIEnv* env, jobject thiz, jstring intentAction, jstring url,
+		jint version) {
 
 	jstring tag = (*env)->NewStringUTF(env, c_TAG);
 
@@ -76,7 +82,12 @@ void Java_cn_edu_bjtu_tsplaycool_uninstallfeedback_utils_UninstallUtil_init(
 				exit(1);
 			}
 		}
-
+		// 若被监听文件不存在，创建文件
+		FILE *p_observedFile = fopen(APP_OBSERVED_FILE, "r");
+		if (p_observedFile == NULL) {
+			p_observedFile = fopen(APP_OBSERVED_FILE, "w");
+		}
+		fclose(p_observedFile);
 		// 创建锁文件，通过检测加锁状态来保证只有一个卸载监听进程
 		int lockFileDescriptor = open(APP_LOCK_FILE, O_RDONLY);
 		if (lockFileDescriptor == -1) {
@@ -114,8 +125,8 @@ void Java_cn_edu_bjtu_tsplaycool_uninstallfeedback_utils_UninstallUtil_init(
 
 		int watchDescriptor;
 
-		watchDescriptor = inotify_add_watch(fileDescriptor,
-				(*env)->GetStringUTFChars(env, path, NULL), IN_DELETE);
+		watchDescriptor = inotify_add_watch(fileDescriptor, APP_OBSERVED_FILE,
+				IN_DELETE);
 		if (watchDescriptor < 0) {
 			LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
 					(*env)->GetStringUTFChars(env,
@@ -145,67 +156,78 @@ void Java_cn_edu_bjtu_tsplaycool_uninstallfeedback_utils_UninstallUtil_init(
 		size_t readBytes = read(fileDescriptor, p_buf,
 				sizeof(struct inotify_event));
 
+		sleep(1); // 睡眠一秒钟，让系统删除干净包名。(防止监听到observedFile被删除后，而包目录还未删除，代码就已经执行到此处。导致不弹出浏览器)
+
 		//走到这里说明收到目录被删除的事件，注销监听器
 		free(p_buf);
 		inotify_rm_watch(fileDescriptor, IN_DELETE);
+		// 判断是否真正卸载了
+		FILE *p_appDir = fopen(APP_DIR, "r");
+		// 确认已卸载
+		if (p_appDir == NULL) {
+			//目录不存在log
+			LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+					(*env)->GetStringUTFChars(env,
+							(*env)->NewStringUTF(env, "uninstalled"),
+							&b_IS_COPY));
 
-		//目录不存在log
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
-				(*env)->GetStringUTFChars(env,
-						(*env)->NewStringUTF(env, "uninstalled"), &b_IS_COPY));
-
-		if (version >= 17) {
-			//4.2以上的系统由于用户权限管理更严格，需要加上 --user 0
-			if (strcmp((*env)->GetStringUTFChars(env, intentAction, NULL),
-					"android.intent.action.VIEW") == 0) {
-				// 系统没有自带浏览器，启动默认浏览器
-				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
-						(*env)->GetStringUTFChars(env,
-								(*env)->NewStringUTF(env,
-										"Android big than 17，default"),
-								&b_IS_COPY));
-				execlp("am", "am", "start", "--user", "0", "-a",
-						"android.intent.action.VIEW", "-d",
-						(*env)->GetStringUTFChars(env, url, NULL),
-						(char *) NULL);
+			if (version >= 17) {
+				//4.2以上的系统由于用户权限管理更严格，需要加上 --user 0
+				if (strcmp((*env)->GetStringUTFChars(env, intentAction, NULL),
+						"android.intent.action.VIEW") == 0) {
+					// 系统没有自带浏览器，启动默认浏览器
+					LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+							(*env)->GetStringUTFChars(env,
+									(*env)->NewStringUTF(env,
+											"Android big than 17，default"),
+									&b_IS_COPY));
+					execlp("am", "am", "start", "--user", "0", "-a",
+							"android.intent.action.VIEW", "-d",
+							(*env)->GetStringUTFChars(env, url, NULL),
+							(char *) NULL);
+				} else {
+					//启动自带浏览器
+					LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+							(*env)->GetStringUTFChars(env,
+									(*env)->NewStringUTF(env,
+											"Android big than 17，self "),
+									&b_IS_COPY));
+					execlp("am", "am", "start", "--user", "0", "-a",
+							"android.intent.action.VIEW", "-d",
+							(*env)->GetStringUTFChars(env, url, NULL), "-n",
+							"com.android.browser/com.android.browser.BrowserActivity",
+							(char *) NULL);
+				}
 			} else {
-				//启动自带浏览器
-				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
-						(*env)->GetStringUTFChars(env,
-								(*env)->NewStringUTF(env,
-										"Android big than 17，self "),
-								&b_IS_COPY));
-				execlp("am", "am", "start", "--user", "0", "-a",
-						"android.intent.action.VIEW", "-d",
-						(*env)->GetStringUTFChars(env, url, NULL), "-n",
-						"com.android.browser/com.android.browser.BrowserActivity",
-						(char *) NULL);
+				if (strcmp((*env)->GetStringUTFChars(env, intentAction, NULL),
+						"android.intent.action.VIEW") == 0) {
+					//系统没有自带浏览器，启动默认浏览器
+					LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+							(*env)->GetStringUTFChars(env,
+									(*env)->NewStringUTF(env,
+											"Android small than 17，default "),
+									&b_IS_COPY));
+					execlp("am", "am", "start", "-a",
+							"android.intent.action.VIEW", "-d",
+							(*env)->GetStringUTFChars(env, url, NULL),
+							(char *) NULL);
+				} else {
+					//启动自带浏览器
+					LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
+							(*env)->GetStringUTFChars(env,
+									(*env)->NewStringUTF(env,
+											"Android small than 17，self"),
+									&b_IS_COPY));
+					execlp("am", "am", "start", "-a",
+							"android.intent.action.VIEW", "-d",
+							(*env)->GetStringUTFChars(env, url, NULL), "-n",
+							"com.android.browser/com.android.browser.BrowserActivity",
+							(char *) NULL);
+				}
 			}
+
 		} else {
-			if (strcmp((*env)->GetStringUTFChars(env, intentAction, NULL),
-					"android.intent.action.VIEW") == 0) {
-				//系统没有自带浏览器，启动默认浏览器
-				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
-						(*env)->GetStringUTFChars(env,
-								(*env)->NewStringUTF(env,
-										"Android small than 17，default "),
-								&b_IS_COPY));
-				execlp("am", "am", "start", "-a", "android.intent.action.VIEW",
-						"-d", (*env)->GetStringUTFChars(env, url, NULL),
-						(char *) NULL);
-			} else {
-				//启动自带浏览器
-				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY),
-						(*env)->GetStringUTFChars(env,
-								(*env)->NewStringUTF(env,
-										"Android small than 17，self"),
-								&b_IS_COPY));
-				execlp("am", "am", "start", "-a", "android.intent.action.VIEW",
-						"-d", (*env)->GetStringUTFChars(env, url, NULL), "-n",
-						"com.android.browser/com.android.browser.BrowserActivity",
-						(char *) NULL);
-			}
-
+			//如果observedFile被删除了，但是实际未卸载，则不弹出浏览器。也防止了一些误弹浏览器操作。
 		}
 
 	} else {

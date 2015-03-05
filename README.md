@@ -12,3 +12,7 @@ uninstallFeedback
 在C层写了一个Kill方法，在JAVA层调用，可以用来结束C层的监听进程，实现原理：将fork出来的监听进程的pid存在data/data/包名/files/中的uninstall文件中，
 
 当需要结束C层监听进程的时候，读取该文件，获取到pid值，再调用linux中的kill函数结束进程。
+
+####2015-03-05新增
+#####1.增加防止误操作处理
+#####2.监听文件由"data/data/包名/lib目录"改为"data/data/data/包名/uninstall/observedFile"文件
